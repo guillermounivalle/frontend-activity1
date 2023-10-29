@@ -10,7 +10,8 @@ class ProductsList extends Component{
             infosalesproducts: [],
             messageSaleInfo:[],
             totalproducts: 0,
-            showConfirmMessage: false
+            showConfirmMessage: false,
+            isAccept:false
         }
         this.chargeProducts = this.chargeProducts.bind(this);
         this.addToCart = this.addToCart.bind(this);
@@ -28,7 +29,7 @@ class ProductsList extends Component{
     };
 
 
-    componentDidMount(){
+    async componentDidMount(){
         this.chargeProducts();
     };
 
@@ -42,7 +43,7 @@ class ProductsList extends Component{
     };
 
     initInfosalesproducts () {
-        this.state.productslist.map( products =>(
+         this.state.productslist.map( products =>(
                 this.state.infosalesproducts.push(
                 {
                     id:products.id,
@@ -141,7 +142,7 @@ class ProductsList extends Component{
 
     showTotalPriceProduct(idproduct){
         const totalpriceproduct =  this.getDatatWithIdProduct(idproduct, 'totalprice'); 
-        return<td>$ {totalpriceproduct}</td>
+        return<td>El total a pagar es  $ {totalpriceproduct}</td>
         
     };
 
@@ -154,18 +155,21 @@ class ProductsList extends Component{
         const productname = this.getDatatWithIdProduct(idproduct, 'nameproduct');
         const quantity = this.getDatatWithIdProduct(idproduct, 'quantity');
         const totalpriceproduct = this.getDatatWithIdProduct(idproduct, 'totalprice');
+        console.log("product name in addd\produ"  + productname);
+        if(quantity !== 0)
             this.state.messageSaleInfo.push({
             productname: productname,
             quantity: quantity,
             totalpriceproduct: totalpriceproduct
         });
-        
     };
 
     infoSaleProductstoUser(){
-        this.setState({
+        /**
+         * this.setState({
             messageSaleInfo:[]
         });
+         */
         this.state.infosalesproducts.map(value => (
             this.addProductListProductsSale(value.id)
         ));
@@ -177,35 +181,46 @@ class ProductsList extends Component{
          * 1. active
          * 2. accept
          * 3. cancel
+         * 4. End
          */
-        if(action === 1){
-            this.infoSaleProductstoUser();
-            this.setState({
+        switch (action) {
+            case 1:
+                this.infoSaleProductstoUser();
+                this.setState({
                 showConfirmMessage: true
             });
-        }
-        if(action === 2){
-            this.setState({
-                messageSaleInfo:[],
-                showConfirmMessage: false,
-                //infosalesproducts:[]
-            });
-            this.initInfosalesproducts();
-        }
-        if(action === 3){
-            this.setState({
-                showConfirmMessage: false
-            })
-        }
-        
-    }
+            break;
+            case 2:
+                this.setState({
+                    isAccept: true
+                });
+                
+            break;
+            case 3:
+                this.setState({
+                    showConfirmMessage: false
+                })
+            break; 
+            case 4:
+                this.initInfosalesproducts();
+                this.setState({
+                    messageSaleInfo:[],
+                    showConfirmMessage: false,
+                    isAccept: false
+                })
+            break;   
+            default:
+                break;
+        };
+    };
 
 
     totalPriceSale(){
         var totalPriceSale = 0;
         this.state.infosalesproducts.map(value => (
             totalPriceSale = totalPriceSale + value.quantity
-        ))
+        ));
+        console.log("Total Price ==== "+totalPriceSale);
         return totalPriceSale;
     };
 
@@ -213,29 +228,27 @@ class ProductsList extends Component{
     render(){
         console.log("ahow mesaage "+ this.state.showConfirmMessage);
         const showMessage = this.state.showConfirmMessage;
+        const isAccept = this.state.isAccept;
         let comp;
         let resume;
-        if(showMessage){
-            resume = <h3>PRODUCTO</h3>
-            comp = 
-            <table className="table "> 
-            <thead>
-                <tr>
-                    <th>Producto</th>
-                    <th>Cantidad</th>
-                    <th>Precio Total por Unidad</th>
-                </tr>
-            </thead>
-            <tbody>
-            {this.state.messageSaleInfo.map(row =>(
-                <tr key={row.id}>
-                    <td>{row.product_name}</td>
-                    <td>{row.quantity}</td>
-                    <td>$ {row.totalpriceproduct}</td> 
-                </tr>
-                ))
-            }
+        let acceptSale
+        if(isAccept){
+            acceptSale =
+            <div className="row">
+            <td>Compra realizada con éxito</td>
             <td>
+                <button 
+                    onClick={() => this.setVisibleResume(4)} 
+                    style={{background:"green", color:"white"}}>
+                     <i class="bi bi-cart-fill"></i> Terminar
+                </button>
+            </td>
+            </div>
+        }
+        if(!isAccept)
+            acceptSale =
+            <div > 
+                <td>
                 <button 
                     onClick={() => this.setVisibleResume(2)} 
                     style={{background:"green", color:"white"}}>
@@ -248,7 +261,30 @@ class ProductsList extends Component{
                     style={{background:"red", color:"white"}}>
                     <i class="bi bi-cart-fill"></i> Cancelar
                 </button>
-            </td>  
+            </td> 
+            </div>
+        if(showMessage){
+            resume = <h3>RESUMEN</h3>
+            comp = 
+            <table className="table "> 
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Precio Total por Unidad</th>
+                </tr>
+            </thead>
+            <tbody>
+            {this.state.messageSaleInfo.map(row =>(
+                <tr key={row.id}>
+                    <td>{row.productname}</td>
+                    <td>{row.quantity}</td>
+                    <td>$ {row.totalpriceproduct}</td> 
+                </tr>
+                ))
+            }
+            {this.showTotalPriceProduct}
+            {acceptSale}
             </tbody>
         </table>
         }else{ 
@@ -260,7 +296,7 @@ class ProductsList extends Component{
             <h1 className="text-center">Selecciona la cantidad de productos a comprar</h1>
             <div className="row">
                 <div className="col-8">
-                <h3>RESUME</h3>
+                <h3>LISTA DE PRODUCTOS</h3>
                     <table className="table "> 
                         <thead>
                             <tr>
@@ -316,7 +352,7 @@ class ProductsList extends Component{
                     style={{background:"green", color:"white"}}>
                         Ir a Pago
                 </button>    
-                <div className="mb-3"></div>
+                <div className="mb-2"></div>
                 {resume}
                 {comp}
                 </div>
