@@ -3,7 +3,7 @@ import './App.css';
 
 //Import ProductsList component
 import ProductsList from "./components/ProductsList"
-import Test from "./components/test"
+
 
 function App() {
   return (
